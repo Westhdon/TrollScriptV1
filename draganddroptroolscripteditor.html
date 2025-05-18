@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TrollScript Drag & Drop</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+      padding: 20px;
+    }
+    h1 { color: #00ffcc; }
+    .commands, .dropzone {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .command {
+      padding: 10px 15px;
+      background: #222;
+      border: 2px solid #00ffcc;
+      border-radius: 10px;
+      cursor: grab;
+    }
+    .dropzone {
+      min-height: 150px;
+      border: 2px dashed #666;
+      padding: 15px;
+      background: #1a1a1a;
+    }
+    .block {
+      background: #333;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 5px 0;
+    }
+    input {
+      background: #222;
+      color: white;
+      border: 1px solid #00ffcc;
+      margin-left: 10px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 15px;
+      background: #00ffcc;
+      color: #000;
+      border: none;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      background: #000;
+      color: #0f0;
+      padding: 10px;
+      border: 1px solid #00ffcc;
+      font-family: monospace;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>TrollScript Drag & Drop</h1>
+
+<h3>Commands:</h3>
+<div class="commands">
+  <div class="command" draggable="true" data-command="move_mouse_random">move_mouse_random</div>
+  <div class="command" draggable="true" data-command="open_browser">open_browser</div>
+  <div class="command" draggable="true" data-command="message">message</div>
+  <div class="command" draggable="true" data-command="sleep">sleep</div>
+  <div class="command" draggable="true" data-command="flip_mouse">flip_mouse</div>
+  <div class="command" draggable="true" data-command="type_spam">type_spam</div>
+  <div class="command" draggable="true" data-command="say">say</div>
+  <div class="command" draggable="true" data-command="flash">flash</div>
+  <div class="command" draggable="true" data-command="fake_error">fake_error</div>
+  <div class="command" draggable="true" data-command="jumpscare">jumpscare</div>
+  <div class="command" draggable="true" data-command="toggle_caps">toggle_caps</div>
+  <div class="command" draggable="true" data-command="text_explode">text_explode</div>
+  <div class="command" draggable="true" data-command="error_spam">error_spam</div>
+  <div class="command" draggable="true" data-command="errorsound">errorsound</div>
+</div>
+
+<h3>Script Builder:</h3>
+<div class="dropzone" id="dropzone">
+  <p>Drop commands here</p>
+</div>
+
+<button onclick="generateScript()">Generate Script</button>
+<button onclick="saveScript()">Save .txt File</button>
+<textarea id="output" readonly></textarea>
+
+<script>
+  const dropzone = document.getElementById("dropzone");
+
+  document.querySelectorAll('.command').forEach(cmd => {
+    cmd.addEventListener('dragstart', e => {
+      e.dataTransfer.setData("text/plain", cmd.dataset.command);
+    });
+  });
+
+  dropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropzone.style.background = "#222";
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.style.background = "#1a1a1a";
+  });
+
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    const cmd = e.dataTransfer.getData("text/plain");
+    addBlock(cmd);
+    dropzone.style.background = "#1a1a1a";
+  });
+
+  function addBlock(command) {
+    const block = document.createElement("div");
+    block.className = "block";
+    block.innerHTML = `
+      <label>${command}</label>
+      ${needsInput(command) ? `<input type="text" placeholder="argument(s)">` : ""}
+    `;
+    dropzone.appendChild(block);
+  }
+
+  function needsInput(command) {
+    return [
+      "message",
+      "open_browser",
+      "sleep",
+      "type_spam",
+      "say",
+      "text_explode"
+    ].includes(command);
+  }
+
+  function generateScript() {
+    const blocks = dropzone.querySelectorAll(".block");
+    let script = "";
+    blocks.forEach(block => {
+      const label = block.querySelector("label").innerText;
+      const input = block.querySelector("input");
+      const arg = input ? input.value.trim() : "";
+      script += arg ? `${label} ${arg}\n` : `${label}\n`;
+    });
+    document.getElementById("output").value = script.trim();
+  }
+
+  function saveScript() {
+    generateScript(); // make sure latest content is included
+    const text = document.getElementById("output").value;
+    const blob = new Blob([text], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "trollscript.txt";
+    a.click();
+  }
+</script>
